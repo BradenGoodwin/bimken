@@ -1,9 +1,13 @@
 package com.bradengoodwin.bimken;
 
+import com.bradengoodwin.bimken.common.entity.BimkenEntity;
 import com.bradengoodwin.bimken.core.init.BlockInit;
+import com.bradengoodwin.bimken.core.init.EntityTypesInit;
 import com.bradengoodwin.bimken.core.init.ItemInit;
+import com.bradengoodwin.bimken.core.init.network.BimkenNetwork;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
+import net.minecraft.entity.ai.attributes.GlobalEntityTypeAttributes;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
@@ -11,6 +15,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.DeferredWorkQueue;
 import net.minecraftforge.fml.InterModComms;
 import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.fml.common.Mod;
@@ -36,6 +41,9 @@ public class BimkenMod {
     public BimkenMod() {
         IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
 
+        bus.addListener(this::commonSetup);
+
+        EntityTypesInit.ENTITY_TYPES.register(bus);
         ItemInit.ITEMS.register(bus);
         BlockInit.BLOCKS.register(bus);
 
@@ -48,6 +56,15 @@ public class BimkenMod {
         BlockInit.BLOCKS.getEntries().stream().map(RegistryObject::get).forEach(block -> {
            event.getRegistry().register(new BlockItem(block,
                    new Item.Properties().tab(ItemGroup.TAB_MISC)).setRegistryName(block.getRegistryName()));
+        });
+    }
+
+    public void commonSetup(final FMLCommonSetupEvent event) {
+        BimkenNetwork.init();
+
+        DeferredWorkQueue.runLater(() -> {
+            GlobalEntityTypeAttributes.put(EntityTypesInit.BIMKEN.get(),
+                    BimkenEntity.setAttributes().build());
         });
     }
 }
